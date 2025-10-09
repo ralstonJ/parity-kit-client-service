@@ -11,8 +11,7 @@ if (!document.getElementById("parity-root")) {
   const link = document.createElement("link");
   link.rel = "stylesheet";
   link.crossOrigin = "anonymous";
-  link.href =
-    "https://worldwide-fair-payment-client.vercel.app/assets/embed.css";
+  link.href = "https://parity-kit-client.vercel.app/assets/embed.css";
   document.head.appendChild(link);
 }
 
