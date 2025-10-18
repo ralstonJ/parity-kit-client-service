@@ -1,6 +1,23 @@
 import { useEffect, useState } from "react";
 import "./App.css";
+import {
+  eventStore,
+  sendBatchedEvents,
+  getDeviceType,
+  getBrowserInfo,
+  createHash,
+} from "./store";
 
+const handleBannerImpression = async () => {
+  eventStore.addEvent({
+    eventName: "banner_impression",
+    path: window.location.pathname,
+    timestamp: new Date().toISOString(),
+    visitorHash: eventStore.hash[0],
+    deviceType: eventStore.deviceType[0],
+    browser: eventStore.browserType[0],
+  });
+};
 interface TierData {
   country: string;
   country_flag: string;
@@ -208,6 +225,10 @@ function App() {
   const [bannerStyles, setBannerStyles] = useState(defaultBannerStyles);
   const [isCopied, setIsCopied] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
+  const [visitorHash, setVisitorHash] = useState<string>("");
+  const [deviceType, setDeviceType] = useState<string>("");
+  const [browserType, setBrowserType] = useState<string>("");
+  const [hoveredToasts, setHoveredToasts] = useState(false);
 
   const credibilityClientAppId = document.getElementById(
     "worldwide-fair-payment-client-98765"
@@ -219,6 +240,49 @@ function App() {
     ? "http://localhost:3012"
     : import.meta.env.VITE_PARITY_SERVER;
   const url = `${apiUrl}/api/tier/${credibilityClientAppId}?path=${currentPath}`;
+
+  // Initialize hash when component mounts
+  useEffect(() => {
+    const initHash = async () => {
+      const hash = await createHash();
+      eventStore.hash.push(hash);
+      setVisitorHash(hash);
+
+      const deviceType = getDeviceType();
+      eventStore.deviceType.push(deviceType);
+      setDeviceType(deviceType);
+
+      const browserType = getBrowserInfo();
+      eventStore.browserType.push(browserType);
+      setBrowserType(browserType);
+    };
+    initHash();
+  }, []);
+
+  // Track page view when component mounts
+  useEffect(() => {
+    if (visitorHash) {
+      eventStore.addEvent({
+        eventName: "page_view",
+        path: window.location.pathname,
+        timestamp: new Date().toISOString(),
+        deviceType: deviceType,
+        browser: browserType,
+        visitorHash: visitorHash,
+      });
+    }
+  }, [visitorHash, deviceType, browserType]);
+
+  // Set up event sending interval
+  useEffect(() => {
+    const intervalId = setInterval(sendBatchedEvents, 15000); // 15 seconds
+
+    return () => {
+      clearInterval(intervalId);
+      // Send any remaining events before unmounting
+      sendBatchedEvents();
+    };
+  }, []);
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -346,6 +410,7 @@ function App() {
           // Show banner after 3 seconds with animation
           setTimeout(() => {
             setShowBanner(true);
+            handleBannerImpression();
           }, 3000);
         })
         .catch((error) => {
@@ -356,10 +421,26 @@ function App() {
   }, [url, isDevelopment]);
 
   const handleClose = () => {
+    eventStore.addEvent({
+      eventName: "banner_dismiss",
+      path: window.location.pathname,
+      timestamp: new Date().toISOString(),
+      visitorHash: visitorHash,
+      deviceType: deviceType,
+      browser: browserType,
+    });
     setIsVisible(false);
   };
 
   const handleCopyCode = () => {
+    eventStore.addEvent({
+      eventName: "copy_discount_code",
+      path: window.location.pathname,
+      timestamp: new Date().toISOString(),
+      visitorHash: visitorHash,
+      deviceType: deviceType,
+      browser: browserType,
+    });
     if (tierData?.discount_code) {
       navigator.clipboard.writeText(tierData.discount_code);
       setIsCopied(true);
@@ -433,6 +514,19 @@ function App() {
       <div
         style={bannerStyles.pppBanner}
         className={`banner ${showBanner ? "show" : ""}`}
+        onMouseEnter={() => {
+          if (!hoveredToasts) {
+            eventStore.addEvent({
+              eventName: "banner_hover",
+              path: window.location.pathname,
+              timestamp: new Date().toISOString(),
+              visitorHash: visitorHash,
+              deviceType: deviceType,
+              browser: browserType,
+            });
+            setHoveredToasts(true);
+          }
+        }}
       >
         <div style={bannerStyles.pppBannerContent}>
           <div>
@@ -603,6 +697,16 @@ function App() {
               : undefined
           }
           className="banner-cta"
+          onClick={() => {
+            eventStore.addEvent({
+              eventName: "banner_cta_click",
+              path: window.location.pathname,
+              timestamp: new Date().toISOString(),
+              visitorHash: visitorHash,
+              deviceType: deviceType,
+              browser: browserType,
+            });
+          }}
         >
           {JSON.parse(tierData.content)?.buttonText}
         </a>
