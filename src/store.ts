@@ -65,7 +65,7 @@ export const sendBatchedEvents = async () => {
   eventStore.events = []; // Clear the queue
   const apiUrl = isDevelopment
     ? "http://localhost:3002"
-    : import.meta.env.VITE_API_URL;
+    : import.meta.env.VITE_PARITY_SERVER;
 
   try {
     const currentUrl = window.location.pathname;
