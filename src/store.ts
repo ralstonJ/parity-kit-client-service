@@ -55,7 +55,7 @@ export const sendBatchedEvents = async () => {
   if (eventStore.events.length === 0) return;
 
   const credibilityClientAppId = document.getElementById(
-    "credibility-client-98765"
+    "worldwide-fair-payment-client-98765"
   )?.dataset.appId;
 
   console.log("credibilityClientAppId", credibilityClientAppId);
