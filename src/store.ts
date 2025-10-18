@@ -58,6 +58,7 @@ export const sendBatchedEvents = async () => {
     "credibility-client-98765"
   )?.dataset.appId;
 
+  console.log("credibilityClientAppId", credibilityClientAppId);
   const isDevelopment = import.meta.env.DEV;
 
   const events = [...eventStore.events];
