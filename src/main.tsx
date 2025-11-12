@@ -11,7 +11,7 @@ if (!document.getElementById("parity-root")) {
   const link = document.createElement("link");
   link.rel = "stylesheet";
   link.crossOrigin = "anonymous";
-  link.href = "https://parity-kit-client-service.vercel.app/assets/embed.css";
+  link.href = "https://client.paritykit.com/assets/embed.css";
   document.head.appendChild(link);
 }
 
